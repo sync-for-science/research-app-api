@@ -1,0 +1,8 @@
+ENV
+.git
+*.pyc
+.cache
+*.egg-info
+.DS_Store
+*.egg-info
+*.sqlite3

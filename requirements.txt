@@ -1,0 +1,16 @@
+## The following requirements were added by pip freeze:
+astroid==1.4.8
+click==6.6
+Flask==0.11.1
+Flask-SQLAlchemy==2.1
+isort==4.2.5
+itsdangerous==0.24
+Jinja2==2.8
+lazy-object-proxy==1.2.2
+MarkupSafe==0.23
+mccabe==0.5.2
+pylint==1.6.4
+six==1.10.0
+SQLAlchemy==1.0.15
+Werkzeug==0.11.11
+wrapt==1.10.8

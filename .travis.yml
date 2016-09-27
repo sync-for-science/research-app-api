@@ -1,0 +1,11 @@
+language: python
+python: "3.5"
+
+# command to install dependencies
+install:
+  - "pip install -r requirements.txt"
+
+# command to run tests
+script:
+  - pylint research_app --disable=R,C,fixme
+  - pep8 research_app

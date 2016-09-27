@@ -1,0 +1,187 @@
+swagger: '2.0'
+info:
+  title: S4S Research App API
+  description: |
+    This API describes the endpoints available to any clients attempting to use
+    the Sync For Science Research App API.
+  version: "1.0.0"
+# will be prefixed to all paths
+basePath: /
+produces:
+  - application/json
+paths:
+  /providers:
+    get:
+      summary: List available providers
+      tags:
+        - provider
+      responses:
+        200:
+          description: Success
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Provider'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /participants:
+    post:
+      summary: Create a new participant
+      tags:
+        - participant
+      responses:
+        200:
+          description: Success
+          schema:
+            $ref: '#/definitions/Participant'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /participants/{participant_id}/authorizations/{provider_id}:
+    post:
+      summary: Store an authorization
+      tags:
+        - participant
+      parameters:
+        - name: participant_id
+          description: The Participant id
+          in: path
+          required: true
+          type: string
+        - name: provider_id
+          description: The Provider id
+          in: path
+          required: true
+          type: string
+        - name: code
+          description: The OAuth authorization code
+          in: formData
+          required: true
+          type: string
+      responses:
+        200:
+          description: Success
+          schema:
+            $ref: '#/definitions/Authorization'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /participants/{participant_id}/authorizations:
+    get:
+      summary: Get all the authorizations for a Participant
+      tags:
+        - participant
+      parameters:
+        - name: participant_id
+          description: The Participant id
+          in: path
+          required: true
+          type: string
+      responses:
+        200:
+          description: An array of Authorizations
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Authorization'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /participants/{participant_id}/authorizations/{provider_id}/$everything:
+    get:
+      summary: Get all the Resources for a Participant for a given provider
+      tags:
+        - participant
+      parameters:
+        - name: participant_id
+          description: The Participant id
+          in: path
+          required: true
+          type: string
+        - name: provider_id
+          description: The Provider id
+          in: path
+          required: true
+          type: string
+      responses:
+        200:
+          description: A FHIR-like "bundle" containing resources.
+          schema:
+            $ref: '#/definitions/Bundle'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+definitions:
+  Authorization:
+    type: object
+    required:
+      - status
+      - provider
+      - resources_endpoint
+      - counts
+    properties:
+      status:
+        type: string
+        description: expired | working
+      provider:
+        type: string
+        description: The Provider name
+      resources_endpoint:
+        type: string
+        description: FHIR URL?
+      counts:
+        type: object
+        description: ...
+        properties:
+          ResourceType:
+            type: integer
+            description: One or more resource types and their counts.
+  Bundle:
+    type: object
+    properties:
+      resourceType:
+        type: string
+        default: Bundle
+      type:
+        type: string
+        default: searchset
+      entry:
+        type: array
+        items:
+          $ref: '#/definitions/Resource'
+  Participant:
+    type: object
+    properties:
+      id:
+        type: string
+        description: a participant id
+  Provider:
+    type: object
+    properties:
+      id:
+        type: string
+        description: a provider id
+      client_id:
+        type: string
+        description: an OAuth client id
+      name:
+        type: string
+        description: a name a Participant would recognize
+  Resource:
+    type: object
+  Error:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
+      fields:
+        type: string
