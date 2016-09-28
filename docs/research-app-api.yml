@@ -178,10 +178,7 @@ definitions:
   Error:
     type: object
     properties:
-      code:
-        type: integer
-        format: int32
-      message:
+      error:
         type: string
-      fields:
+      message:
         type: string

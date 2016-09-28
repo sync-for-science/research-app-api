@@ -16,9 +16,11 @@ def create_app():
         extensions,
     )
     from research_app.views.api.views import BP as api_blueprint
+    from research_app.views.cli.views import BP as cli_blueprint
 
     # Register blueprints
     app.register_blueprint(api_blueprint)
+    app.register_blueprint(cli_blueprint)
 
     # Init extensions
     extensions.db.init_app(app)

@@ -2,3 +2,4 @@ ENV
 env
 __pycache__
 env.sh
+*.sqlite3
