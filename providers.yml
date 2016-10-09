@@ -1,6 +1,6 @@
 ---
 - name: smart
-  client_id: research-app
-  client_secret: demo-secret-s4s
+  client_id: api-test
+  client_secret: api-secret
   scope: patient/*.read offline_access
-  fhir_url: http://smart.dev.syncfor.science:9000/api/fhir/
+  fhir_url: http://proxy.dev.syncfor.science:9000/api/fhir/

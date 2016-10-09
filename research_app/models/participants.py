@@ -2,6 +2,9 @@
 '''
 import json
 
+from fhirclient import client
+from furl import furl
+
 from research_app.extensions import db
 
 
@@ -26,13 +29,16 @@ class Participant(db.Model):
         '''
         return [auth.view_model for auth in self._authorizations]
 
-    def authorize(self, provider, code):
+    def authorize(self, provider, code, state):
         ''' Create a new Authorization and start the token exchange process.
         '''
         if self.authorization(provider):
             message = 'Provider "{}" already authorized.'.format(provider.name)
             raise AuthorizationException(message)
-        self._authorizations.append(Authorization(provider, code))
+        auth = Authorization(provider, code, state)
+        self._authorizations.append(auth)
+
+        return auth
 
     def authorization(self, provider):
         ''' Return the Authorization for this Provider, if available.
@@ -61,6 +67,8 @@ class Authorization(db.Model):
     _id = db.Column('id', db.Integer, primary_key=True)
     status = db.Column(db.String)
     code = db.Column(db.String)
+    state = db.Column(db.String)
+    fhirclient = db.Column(db.Text)
 
     _participant_id = db.Column('participant_id',
                                 db.Integer,
@@ -73,10 +81,31 @@ class Authorization(db.Model):
 
     _resources = db.relationship('Resource')
 
-    def __init__(self, provider, code):
+    def __init__(self, provider, code, state):
         self.status = self.STATUS_PENDING
         self.provider = provider
         self.code = code
+        self.state = state
+        self.fhirclient = None
+
+    def complete(self):
+        ''' Complete the authorization process.
+        '''
+        fhirclient = self.provider.fhirclient
+        fhirclient.server.auth.auth_state = self.state
+        fhirclient.handle_callback(self.as_callback_url)
+        self.fhirclient = json.dumps(fhirclient.state)
+        self.status = self.STATUS_ACTIVE
+        self.code = None
+        self.state = None
+
+    @property
+    def as_callback_url(self):
+        url = furl(self.provider.redirect_uri)
+        url.args['code'] = self.code
+        url.args['state'] = self.state
+
+        return url.url
 
     @property
     def view_model(self):

@@ -1,3 +1,5 @@
+''' CLI commands.
+'''
 from flask import Blueprint
 import yaml
 
@@ -14,6 +16,7 @@ def initdb():
     ''' Initialize the database.
     '''
     db.create_all()
+
 
 @app.cli.command()
 def create_providers():

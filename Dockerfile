@@ -26,4 +26,8 @@ COPY . /usr/src/app
 #RUN pip install -e .
 ENV FLASK_APP=/usr/src/app/app.py
 
-CMD flask
+RUN flask initdb
+RUN flask create_providers
+
+ENTRYPOINT ["flask"]
+CMD ["run", "--host", "0.0.0.0"]

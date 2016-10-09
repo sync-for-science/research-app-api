@@ -56,8 +56,8 @@ paths:
           in: path
           required: true
           type: string
-        - name: code
-          description: The OAuth authorization code
+        - name: redirect_uri
+          description: The redirect_uri used to start the process. Should inclue the "state" and "code" query params.
           in: formData
           required: true
           type: string

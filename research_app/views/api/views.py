@@ -3,6 +3,7 @@
 from flask import (
     Blueprint,
     jsonify,
+    redirect,
     request,
 )
 
@@ -25,6 +26,16 @@ def list_providers():
     return jsonify([provider.view_model for provider in providers])
 
 
+@BP.route('/providers/<provider_id>/launch')
+def launch_provider(provider_id):
+    ''' Launch a provider.
+    '''
+    provider = Provider.query.get(provider_id)
+    client = provider.fhirclient('http://tests.dev.syncfor.science:9003/authorized/')
+
+    return redirect(client.authorize_url)
+
+
 @BP.route('/participants', methods=['POST'])
 def create_participant():
     ''' Create a new participant.
@@ -40,16 +51,23 @@ def create_participant():
 def create_authorization(participant_id, provider_id):
     ''' Store an authorization.
     '''
-    code = request.form.get('code')
+    callback_url = furl(request.form.get('callback_url'))
+    code = callback_url.args['code']
+    state = callback_url.args['state']
 
     participant = Participant.query.get(participant_id)
     provider = Provider.query.get(provider_id)
 
     try:
-        participant.authorize(provider, code)
+        # Create the authorization
+        auth = participant.authorize(provider, code, state)
         db.session.commit()
 
-        return jsonify(participant.authorization(provider))
+        # Two-step process in case the OAuth steps don't complete
+        auth.complete()
+        db.session.commit()
+
+        return jsonify(auth.view_model)
     except AuthorizationException as err:
         resp = jsonify({
             'error': type(err).__name__,
