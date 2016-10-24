@@ -68,7 +68,7 @@ class Authorization(db.Model):
     status = db.Column(db.String)
     code = db.Column(db.String)
     state = db.Column(db.String)
-    fhirclient = db.Column(db.Text)
+    _fhirclient = db.Column('fhirclient', db.Text)
 
     _participant_id = db.Column('participant_id',
                                 db.Integer,
@@ -86,7 +86,8 @@ class Authorization(db.Model):
         self.provider = provider
         self.code = code
         self.state = state
-        self.fhirclient = None
+        self._fhirclient = None
+        self._resources = []
 
     def complete(self):
         ''' Complete the authorization process.
@@ -94,13 +95,28 @@ class Authorization(db.Model):
         fhirclient = self.provider.fhirclient
         fhirclient.server.auth.auth_state = self.state
         fhirclient.handle_callback(self.as_callback_url)
-        self.fhirclient = json.dumps(fhirclient.state)
+        self._fhirclient = json.dumps(fhirclient.state)
         self.status = self.STATUS_ACTIVE
         self.code = None
         self.state = None
 
+    def fetch_resources(self):
+        ''' Downloads all the available resources.
+        '''
+        patient = Resource(entry_json=json.dumps(self.fhirclient.patient.as_json()))
+        self._resources.append(patient)
+
+    @property
+    def fhirclient(self):
+        ''' Returns a FHIRClient object from the current state.
+        '''
+        state = json.loads(self._fhirclient)
+        return client.FHIRClient(state=state)
+
     @property
     def as_callback_url(self):
+        ''' Builds a "callback url" from this Authorization.
+        '''
         url = furl(self.provider.redirect_uri)
         url.args['code'] = self.code
         url.args['state'] = self.state
