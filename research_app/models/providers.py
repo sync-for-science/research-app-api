@@ -40,3 +40,32 @@ class Provider(db.Model):
             'client_id': self.client_id,
             'name': self.name,
         }
+
+    @property
+    def supported_endpoints(self):
+        ''' A list of S4S endpoints supported by this provider.
+
+        @TODO: Filter endpoints using conformance statement.
+        '''
+        return [
+            # Smoking status
+            'Observation?category=social-history&patient={patient_id}',
+            # Problems
+            'Condition?patient={patient_id}',
+            # Medications and allergies
+            'MedicationOrder?patient={patient_id}',
+            'MedicationStatement?patient={patient_id}',
+            'MedicationDispense?patient={patient_id}',
+            'MedicationAdministration?patient={patient_id}',
+            'AllergyIntolerance?patient={patient_id}',
+            # Lab results
+            'Observation?category=laboratory&patient={patient_id}',
+            # Vital signs
+            'Observation?category=vital-signs&patient={patient_id}',
+            # Procedures
+            'Procedure?patient={patient_id}',
+            # Immunizations
+            'Immunization?patient={patient_id}',
+            # Patient documents
+            'DocumentReference?patient={patient_id}',
+        ]

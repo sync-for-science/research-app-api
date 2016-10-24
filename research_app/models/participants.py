@@ -3,6 +3,8 @@
 import json
 
 from fhirclient import client
+from fhirclient.models.fhirabstractbase import FHIRValidationError
+from fhirclient.models.fhirelementfactory import FHIRElementFactory
 from furl import furl
 
 from research_app.extensions import db
@@ -79,7 +81,7 @@ class Authorization(db.Model):
                              db.ForeignKey('provider.id'))
     provider = db.relationship('Provider')
 
-    _resources = db.relationship('Resource')
+    _resources = db.relationship('Resource', cascade='all, delete, delete-orphan')
 
     def __init__(self, provider, code, state):
         self.status = self.STATUS_PENDING
@@ -103,15 +105,26 @@ class Authorization(db.Model):
     def fetch_resources(self):
         ''' Downloads all the available resources.
         '''
-        patient = Resource(entry_json=json.dumps(self.fhirclient.patient.as_json()))
-        self._resources.append(patient)
+        fhirclient = self.fhirclient()
+        self._resources = []
 
-    @property
+        resource = Resource.from_fhirclient_model(fhirclient.patient)
+        self._resources.append(resource)
+
+        for endpoint in self.provider.supported_endpoints:
+            endpoint = endpoint.format(patient_id=fhirclient.patient_id)
+            bundle = fhirclient.server.request_json(endpoint)
+            self._resources += Resource.from_json_bundle(bundle)
+
     def fhirclient(self):
         ''' Returns a FHIRClient object from the current state.
         '''
+        def save_func(state):  # pylint: disable=missing-docstring
+            self._fhirclient = json.dumps(state)
+
         state = json.loads(self._fhirclient)
-        return client.FHIRClient(state=state)
+        return client.FHIRClient(state=state,
+                                 save_func=save_func)
 
     @property
     def as_callback_url(self):
@@ -152,16 +165,52 @@ class Resource(db.Model):
     '''
     _id = db.Column('id', db.Integer, primary_key=True)
     entry_json = db.Column(db.Text)
+    resource_type = db.Column(db.String)
 
     _authorization_id = db.Column('authorization_id',
                                   db.Integer,
                                   db.ForeignKey('authorization.id'))
+
+    def __init__(self, entry):
+        self.entry_json = json.dumps(entry)
+        self.resource_type = entry['resourceType']
 
     @property
     def view_model(self):
         ''' This is the object the view expects.
         '''
         return json.loads(self.entry_json)
+
+    @classmethod
+    def from_fhirclient_model(cls, model):
+        ''' Resource factory method.
+
+        Args:
+            model (fhirclient.models.fhirabstractbase.FHIRAbstractBase)
+
+        Returns:
+            Resource
+        '''
+        return cls(entry=model.as_json())
+
+    @classmethod
+    def from_json_bundle(cls, bundle):
+        ''' Resource factory generator.
+
+        Args:
+            bundle (dict): A dictionary representation of a FHIR Bundle.
+
+        Yields:
+            Resource
+        '''
+        for entry in bundle.get('entry', []):
+            try:
+                res = entry.get('resource', {})
+                res_type = res.get('resourceType', None)
+                model = FHIRElementFactory.instantiate(res_type, res)
+                yield cls.from_fhirclient_model(model)
+            except FHIRValidationError:
+                continue
 
 
 class AuthorizationException(Exception):
