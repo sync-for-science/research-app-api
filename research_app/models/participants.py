@@ -122,7 +122,7 @@ class Authorization(db.Model):
     def is_useful(self):
         ''' True if this Authorization has not yet expired.
         '''
-        return self.status in [self.STATUS_PENDING, self.STATUS_ACTIVE]
+        return self.status in [self.STATUS_ACTIVE]
 
     @property
     def resources(self):

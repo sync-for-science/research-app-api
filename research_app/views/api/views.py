@@ -6,6 +6,8 @@ from flask import (
     redirect,
     request,
 )
+from fhirclient.client import FHIRUnauthorizedException
+from furl import furl
 
 from research_app.extensions import db
 from research_app.models.participants import (
@@ -31,7 +33,7 @@ def launch_provider(provider_id):
     ''' Launch a provider.
     '''
     provider = Provider.query.get(provider_id)
-    client = provider.fhirclient('http://tests.dev.syncfor.science:9003/authorized/')
+    client = provider.fhirclient
 
     return redirect(client.authorize_url)
 
@@ -51,7 +53,7 @@ def create_participant():
 def create_authorization(participant_id, provider_id):
     ''' Store an authorization.
     '''
-    callback_url = furl(request.form.get('callback_url'))
+    callback_url = furl(request.form.get('redirect_uri'))
     code = callback_url.args['code']
     state = callback_url.args['state']
 
@@ -68,6 +70,13 @@ def create_authorization(participant_id, provider_id):
         db.session.commit()
 
         return jsonify(auth.view_model)
+    except FHIRUnauthorizedException as err:
+        resp = jsonify({
+            'error': type(err).__name__,
+            'message': str(err.response.text),
+        })
+        resp.status_code = 500
+        return resp
     except AuthorizationException as err:
         resp = jsonify({
             'error': type(err).__name__,
