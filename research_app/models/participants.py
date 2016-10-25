@@ -1,5 +1,6 @@
 ''' Participants module.
 '''
+from itertools import groupby
 import json
 
 from fhirclient import client
@@ -140,11 +141,16 @@ class Authorization(db.Model):
     def view_model(self):
         ''' This is the object the view expects.
         '''
+        resources = self.resources
+        resources.sort(key=lambda x: x['resourceType'])
+        grouped = groupby(resources, lambda x: x['resourceType'])
+        counts = {key: len(list(val)) for key, val in grouped}
+
         return {
             'status': self.status,
             'provider': self.provider.name,
             'resources_endpoint': self.provider.fhir_url,
-            'counts': [],
+            'counts': counts,
         }
 
     @property
