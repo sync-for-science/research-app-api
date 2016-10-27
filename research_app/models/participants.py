@@ -96,6 +96,7 @@ class Authorization(db.Model):
         ''' Complete the authorization process.
         '''
         fhirclient = self.provider.fhirclient
+        fhirclient.prepare()
         fhirclient.server.auth.auth_state = self.state
         fhirclient.handle_callback(self.as_callback_url)
         self._fhirclient = json.dumps(fhirclient.state)
