@@ -27,7 +27,6 @@ class Provider(db.Model):
             'redirect_uri': self.redirect_uri,
             'scope': self.scope,
         })
-        fhirclient.prepare()
 
         return fhirclient
 
