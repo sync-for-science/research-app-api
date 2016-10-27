@@ -3,3 +3,6 @@ env
 __pycache__
 env.sh
 *.sqlite3
+*.egg-info
+.cache
+.coverage

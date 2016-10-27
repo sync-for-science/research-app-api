@@ -38,6 +38,8 @@ def sync_fhir_resources():
     '''
     authorizations = Authorization.query.filter_by(status=Authorization.STATUS_ACTIVE)
 
-    for auth in authorizations:
-        auth.fetch_resources()
-    db.session.commit()
+    try:
+        for auth in authorizations:
+            auth.fetch_resources()
+    finally:
+        db.session.commit()

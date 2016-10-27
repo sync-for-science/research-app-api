@@ -96,6 +96,7 @@ class Authorization(db.Model):
         ''' Complete the authorization process.
         '''
         fhirclient = self.provider.fhirclient
+        fhirclient.prepare()
         fhirclient.server.auth.auth_state = self.state
         fhirclient.handle_callback(self.as_callback_url)
         self._fhirclient = json.dumps(fhirclient.state)
@@ -109,13 +110,17 @@ class Authorization(db.Model):
         fhirclient = self.fhirclient()
         self._resources = []
 
-        resource = Resource.from_fhirclient_model(fhirclient.patient)
-        self._resources.append(resource)
+        try:
+            resource = Resource.from_fhirclient_model(fhirclient.patient)
+            self._resources.append(resource)
 
-        for endpoint in self.provider.supported_endpoints:
-            endpoint = endpoint.format(patient_id=fhirclient.patient_id)
-            bundle = fhirclient.server.request_json(endpoint)
-            self._resources += Resource.from_json_bundle(bundle)
+            for endpoint in self.provider.supported_endpoints:
+                endpoint = endpoint.format(patient_id=fhirclient.patient_id)
+                bundle = fhirclient.server.request_json(endpoint)
+                self._resources += Resource.from_json_bundle(bundle)
+        except client.FHIRUnauthorizedException:
+            self.status = self.STATUS_EXPIRED
+            raise AuthorizationException('Authorization Expired.')
 
     def fhirclient(self):
         ''' Returns a FHIRClient object from the current state.

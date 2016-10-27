@@ -4,5 +4,5 @@ ENV
 .cache
 *.egg-info
 .DS_Store
-*.egg-info
 *.sqlite3
+.coverage
