@@ -28,14 +28,21 @@ def list_providers():
     return jsonify([provider.view_model for provider in providers])
 
 
-@BP.route('/providers/<provider_id>/launch')
-def launch_provider(provider_id):
+@BP.route('/providers/<provider_id>/launch/<participant_id>', methods=['POST'])
+def launch_provider(provider_id, participant_id):
     ''' Launch a provider.
     '''
     provider = Provider.query.get(provider_id)
-    client = provider.fhirclient
+    participant = Participant.query.get(participant_id)
 
-    return redirect(client.authorize_url)
+    # Begin the authorization and generate an authorize_url
+    auth = participant.begin_authorization(provider)
+    authorize_url = auth.authorize_url()
+
+    # Save the interim FHIRClient state
+    db.session.commit()
+
+    return redirect(authorize_url)
 
 
 @BP.route('/participants', methods=['POST'])
@@ -49,8 +56,8 @@ def create_participant():
     return jsonify(participant.view_model)
 
 
-@BP.route('/participants/<participant_id>/authorizations/<provider_id>', methods=['POST'])
-def create_authorization(participant_id, provider_id):
+@BP.route('/participants/<participant_id>/authorizations', methods=['POST'])
+def create_authorization(participant_id):
     ''' Store an authorization.
     '''
     callback_url = furl(request.form.get('redirect_uri'))
@@ -58,15 +65,10 @@ def create_authorization(participant_id, provider_id):
     state = callback_url.args['state']
 
     participant = Participant.query.get(participant_id)
-    provider = Provider.query.get(provider_id)
 
     try:
         # Create the authorization
-        auth = participant.authorize(provider, code, state)
-        db.session.commit()
-
-        # Two-step process in case the OAuth steps don't complete
-        auth.complete()
+        auth = participant.complete_authorization(code, state)
         db.session.commit()
 
         return jsonify(auth.view_model)

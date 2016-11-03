@@ -26,6 +26,32 @@ paths:
           description: Unexpected error
           schema:
             $ref: '#/definitions/Error'
+  /providers/{provider_id}/launch/{participant_id}:
+    post:
+      summary: Generate a "launch" URL with a unique "state".
+      tags:
+        - provider
+      parameters:
+        - name: provider_id
+          description: The Provider id
+          in: path
+          required: true
+          type: string
+        - name: participant_id
+          description: The Participant id
+          in: path
+          required: true
+          type: string
+      responses:
+        302:
+          description: Success
+          headers:
+            Location:
+              type: string
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
   /participants:
     post:
       summary: Create a new participant
@@ -40,7 +66,7 @@ paths:
           description: Unexpected error
           schema:
             $ref: '#/definitions/Error'
-  /participants/{participant_id}/authorizations/{provider_id}:
+  /participants/{participant_id}/authorizations:
     post:
       summary: Store an authorization
       tags:
@@ -48,11 +74,6 @@ paths:
       parameters:
         - name: participant_id
           description: The Participant id
-          in: path
-          required: true
-          type: string
-        - name: provider_id
-          description: The Provider id
           in: path
           required: true
           type: string
@@ -70,7 +91,6 @@ paths:
           description: Unexpected error
           schema:
             $ref: '#/definitions/Error'
-  /participants/{participant_id}/authorizations:
     get:
       summary: Get all the authorizations for a Participant
       tags:
