@@ -32,24 +32,27 @@ class Participant(db.Model):
         '''
         return [auth.view_model for auth in self._authorizations]
 
-    def authorize(self, provider, code, state):
+    def begin_authorization(self, provider):
         ''' Create a new Authorization and start the token exchange process.
         '''
-        if self.authorization(provider):
-            message = 'Provider "{}" already authorized.'.format(provider.name)
-            raise AuthorizationException(message)
-        auth = Authorization(provider, code, state)
+        auth = Authorization(provider)
         self._authorizations.append(auth)
 
         return auth
 
-    def authorization(self, provider):
-        ''' Return the Authorization for this Provider, if available.
+    def complete_authorization(self, code, state):
+        ''' Complete the Authorization process.
         '''
-        for authorization in self._authorizations:
-            if authorization.provider is provider and authorization.is_useful:
-                return authorization.view_model
-        return None
+        try:
+            auth = [auth for auth in self._authorizations
+                    if auth.state == state][0]
+        except IndexError:
+            message = 'Authorization with state "{}" not found.'.format(state)
+            raise AuthorizationException(message)
+
+        auth.complete(code)
+
+        return auth
 
     def resources(self, provider):
         ''' Return all the Resources for this Provider, if available.
@@ -69,8 +72,6 @@ class Authorization(db.Model):
 
     _id = db.Column('id', db.Integer, primary_key=True)
     status = db.Column(db.String)
-    code = db.Column(db.String)
-    state = db.Column(db.String)
     _fhirclient = db.Column('fhirclient', db.Text)
 
     _participant_id = db.Column('participant_id',
@@ -84,25 +85,29 @@ class Authorization(db.Model):
 
     _resources = db.relationship('Resource', cascade='all, delete, delete-orphan')
 
-    def __init__(self, provider, code, state):
+    def __init__(self, provider):
         self.status = self.STATUS_PENDING
         self.provider = provider
-        self.code = code
-        self.state = state
         self._fhirclient = None
         self._resources = []
 
-    def complete(self):
+    @property
+    def state(self):
+        ''' Accessor for the FHIRClient temporary variable.
+        '''
+        return self.fhirclient().server.auth.auth_state
+
+    def authorize_url(self):
+        ''' Generate a FHIRClient authorize url.
+        '''
+        return self.fhirclient().authorize_url
+
+    def complete(self, code):
         ''' Complete the authorization process.
         '''
-        fhirclient = self.provider.fhirclient
-        fhirclient.prepare()
-        fhirclient.server.auth.auth_state = self.state
-        fhirclient.handle_callback(self.as_callback_url)
-        self._fhirclient = json.dumps(fhirclient.state)
+        fhirclient = self.fhirclient()
+        fhirclient.handle_callback(self.callback_url(code))
         self.status = self.STATUS_ACTIVE
-        self.code = None
-        self.state = None
 
     def fetch_resources(self):
         ''' Downloads all the available resources.
@@ -128,16 +133,21 @@ class Authorization(db.Model):
         def save_func(state):  # pylint: disable=missing-docstring
             self._fhirclient = json.dumps(state)
 
-        state = json.loads(self._fhirclient)
+        if not self._fhirclient:
+            fhirclient = self.provider.fhirclient
+            fhirclient.prepare()
+            state = fhirclient.state
+        else:
+            state = json.loads(self._fhirclient)
+
         return client.FHIRClient(state=state,
                                  save_func=save_func)
 
-    @property
-    def as_callback_url(self):
+    def callback_url(self, code):
         ''' Builds a "callback url" from this Authorization.
         '''
         url = furl(self.provider.redirect_uri)
-        url.args['code'] = self.code
+        url.args['code'] = code
         url.args['state'] = self.state
 
         return url.url
@@ -157,12 +167,6 @@ class Authorization(db.Model):
             'resources_endpoint': self.provider.fhir_url,
             'counts': counts,
         }
-
-    @property
-    def is_useful(self):
-        ''' True if this Authorization has not yet expired.
-        '''
-        return self.status in [self.STATUS_ACTIVE]
 
     @property
     def resources(self):
