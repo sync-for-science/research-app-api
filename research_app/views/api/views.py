@@ -9,6 +9,7 @@ from flask import (
 from fhirclient.client import FHIRUnauthorizedException
 from furl import furl
 
+from research_app.authentication import requires_auth
 from research_app.extensions import db
 from research_app.models.participants import (
     Participant,
@@ -29,6 +30,7 @@ def list_providers():
 
 
 @BP.route('/providers/<provider_id>/launch/<participant_id>', methods=['POST'])
+@requires_auth
 def launch_provider(provider_id, participant_id):
     ''' Launch a provider.
     '''
@@ -46,6 +48,7 @@ def launch_provider(provider_id, participant_id):
 
 
 @BP.route('/participants', methods=['POST'])
+@requires_auth
 def create_participant():
     ''' Create a new participant.
     '''
@@ -57,6 +60,7 @@ def create_participant():
 
 
 @BP.route('/participants/<participant_id>/authorizations', methods=['POST'])
+@requires_auth
 def create_authorization(participant_id):
     ''' Store an authorization.
     '''
@@ -89,6 +93,7 @@ def create_authorization(participant_id):
 
 
 @BP.route('/participants/<participant_id>/authorizations')
+@requires_auth
 def list_authorizations(participant_id):
     ''' Get all the authorizations for a Participant.
     '''
@@ -97,6 +102,7 @@ def list_authorizations(participant_id):
 
 
 @BP.route('/participants/<participant_id>/authorizations/<provider_id>/$everything')
+@requires_auth
 def list_resources(participant_id, provider_id):
     ''' Get all the Resources for a Participant for a given Provider.
     '''

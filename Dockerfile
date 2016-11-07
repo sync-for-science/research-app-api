@@ -24,7 +24,9 @@ COPY . /usr/src/app
 
 # Configure the app
 #RUN pip install -e .
-ENV FLASK_APP=/usr/src/app/app.py
+ENV FLASK_APP "/usr/src/app/app.py"
+ENV AUTH_USERNAME "s4s-app"
+ENV AUTH_PASSWORD "s4s-app-secret"
 
 RUN flask initdb
 RUN flask create_providers
