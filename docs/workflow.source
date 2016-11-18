@@ -1,0 +1,27 @@
+User -> Client : User registers with Client 
+Client -> Research App API : Create new Participant
+note over Research App API
+    Create a unique id for Particpant.
+    Store it in a database.
+end note
+Research App API -> Client : Return unique Participant id
+note over User : Some time passes...
+User -> Client : I would like to share my data
+Client -> FHIR Server : App asks for authorization
+FHIR Server -> Client : OAuth authorization code
+Client -> Research App API : Store Authorization (includes authorization code)
+Research App API -> FHIR Server : Exchange authorization code for access token
+FHIR Server -> Research App API : Access and Refresh tokens
+Research App API -> FHIR Server : Access clinical data
+note over Research App API
+    Store FHIR resources
+    in a database
+end note
+note over User : Some time passes...
+User -> Client : What have I shared with the Research App?
+Client -> Research App API : Request Authorizations
+Research App API -> Client : List of Authorizations, containing FHIR resource counts
+note over Client 
+    Show pretty list
+    of FHIR resources
+end note
