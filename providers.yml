@@ -1,7 +1,7 @@
 ---
-- name: smart
+- name: SMART
   client_id: api-test
   client_secret: api-secret
   scope: patient/*.read offline_access
   fhir_url: http://proxy.dev.syncfor.science:9000/api/fhir/
-  redirect_uri: http://tests.dev.syncfor.science:9003/authorized/
+  redirect_uri: http://dev.syncfor.science:9001/authorized

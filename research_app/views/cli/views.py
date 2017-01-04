@@ -5,7 +5,7 @@ import yaml
 
 from research_app.application import app
 from research_app.extensions import db
-from research_app.models.participants import Authorization
+from research_app.models.participants import Authorization, Participant
 from research_app.models.providers import Provider
 
 
@@ -29,6 +29,15 @@ def create_providers():
     for row in config:
         provider = Provider(**row)
         db.session.add(provider)
+    db.session.commit()
+
+
+@app.cli.command()
+def create_participant():
+    ''' Create a new participant.
+    '''
+    participant = Participant()
+    db.session.add(participant)
     db.session.commit()
 
 
