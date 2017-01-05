@@ -1,5 +1,6 @@
 ''' CLI commands.
 '''
+import click
 from flask import Blueprint
 import yaml
 
@@ -42,10 +43,20 @@ def create_participant():
 
 
 @app.cli.command()
-def sync_fhir_resources():
+@click.option('--participant', default=None, help='Participant id', type=int)
+@click.option('--provider', default=None, help='Provider id', type=int)
+def sync_fhir_resources(participant, provider):
     ''' Download all authorized FHIR resources.
     '''
-    authorizations = Authorization.query.filter_by(status=Authorization.STATUS_ACTIVE)
+    conditions = {
+        'status': Authorization.STATUS_ACTIVE,
+    }
+    if participant:
+        conditions['_participant_id'] = participant
+    if provider:
+        conditions['_provider_id'] = provider
+
+    authorizations = Authorization.query.filter_by(**conditions)
 
     try:
         for auth in authorizations:

@@ -2,6 +2,7 @@
 '''
 from itertools import groupby
 import json
+import subprocess
 
 from fhirclient import client
 from fhirclient.models.fhirabstractbase import FHIRValidationError
@@ -46,6 +47,15 @@ class Participant(db.Model):
         try:
             auth = [auth for auth in self._authorizations
                     if auth.state == state][0]
+
+            # Deactivate existing authorizations with this provider
+            for old in self._authorizations:
+                if old is auth:
+                    continue
+                if old.provider is not auth.provider:
+                    continue
+                old.expire()
+
         except IndexError:
             message = 'Authorization with state "{}" not found.'.format(state)
             raise AuthorizationException(message)
@@ -108,6 +118,19 @@ class Authorization(db.Model):
         fhirclient = self.fhirclient()
         fhirclient.handle_callback(self.callback_url(code))
         self.status = self.STATUS_ACTIVE
+
+        # TODO: Something more robust than this to kick-start resource syncing
+        subprocess.Popen([
+            'flask',
+            'sync_fhir_resources'
+            '--participant=' + str(self._participant_id),
+            '--provider=' + str(self._provider_id),
+        ])
+
+    def expire(self):
+        ''' Expire an Authorization.
+        '''
+        self.status = self.STATUS_EXPIRED
 
     def fetch_resources(self):
         ''' Downloads all the available resources.
