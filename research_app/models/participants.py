@@ -122,7 +122,7 @@ class Authorization(db.Model):
         # TODO: Something more robust than this to kick-start resource syncing
         subprocess.Popen([
             'flask',
-            'sync_fhir_resources'
+            'sync_fhir_resources',
             '--participant=' + str(self._participant_id),
             '--provider=' + str(self._provider_id),
         ])
