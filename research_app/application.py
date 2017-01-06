@@ -7,7 +7,7 @@ from flask import Flask
 
 # Create and configure application
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db/db.sqlite3'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['AUTH_USERNAME'] = os.getenv('AUTH_USERNAME')
 app.config['AUTH_PASSWORD'] = os.getenv('AUTH_PASSWORD')
