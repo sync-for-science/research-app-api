@@ -27,6 +27,9 @@ def create_providers():
     with open('./providers.yml') as handle:
         config = yaml.load(handle)
 
+    # Truncate existing records
+    Provider.query.delete()
+
     for row in config:
         provider = Provider(**row)
         db.session.add(provider)
