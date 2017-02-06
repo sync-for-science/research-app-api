@@ -7,7 +7,7 @@
   redirect_uri: http://app.dev.syncfor.science:9001/authorized
 - name: Epic
   client_id: 94bdc785-64af-4e7e-87be-b7a285e9c1d6
-  client_secret: Argonaut
+  client_secret: argonaut
   scope: patient/*.read offline_access
   fhir_url: https://open-ic.epic.com/Argonaut/api/FHIR/Argonaut/
   redirect_uri: http://app.dev.syncfor.science:9001/authorized
