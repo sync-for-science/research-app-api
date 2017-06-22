@@ -2,6 +2,7 @@
 '''
 from itertools import groupby
 import json
+import logging
 import subprocess
 
 from fhirclient import client
@@ -143,9 +144,12 @@ class Authorization(db.Model):
             self._resources.append(resource)
 
             for endpoint in self.provider.supported_endpoints:
-                endpoint = endpoint.format(patient_id=fhirclient.patient_id)
-                bundle = fhirclient.server.request_json(endpoint)
-                self._resources += Resource.from_json_bundle(bundle)
+                try:
+                    endpoint = endpoint.format(patient_id=fhirclient.patient_id)
+                    bundle = fhirclient.server.request_json(endpoint)
+                    self._resources += Resource.from_json_bundle(bundle)
+                except client.FHIRNotFoundException:
+                    logging.info('Not found: ' + endpoint)
         except client.FHIRUnauthorizedException:
             self.status = self.STATUS_EXPIRED
             raise AuthorizationException('Authorization Expired.')
