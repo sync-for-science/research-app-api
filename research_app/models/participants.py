@@ -9,6 +9,7 @@ from fhirclient import client
 from fhirclient.models.fhirabstractbase import FHIRValidationError
 from fhirclient.models.fhirelementfactory import FHIRElementFactory
 from furl import furl
+import requests
 
 from research_app.extensions import db
 
@@ -148,6 +149,8 @@ class Authorization(db.Model):
                     endpoint = endpoint.format(patient_id=fhirclient.patient_id)
                     bundle = fhirclient.server.request_json(endpoint)
                     self._resources += Resource.from_json_bundle(bundle)
+                except requests.exceptions.HTTPError:
+                    logging.info('HTTP Error: ' + endpoint)
                 except client.FHIRNotFoundException:
                     logging.info('Not found: ' + endpoint)
         except client.FHIRUnauthorizedException:
