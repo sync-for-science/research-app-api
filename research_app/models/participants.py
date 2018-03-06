@@ -177,7 +177,7 @@ class Authorization(db.Model):
         else:
             state = json.loads(self._fhirclient)
 
-        return self.provider.fhirlib(state=state,
+        return self.provider.fhirlib(state=state,
                                  save_func=save_func)
 
     def callback_url(self, code):
