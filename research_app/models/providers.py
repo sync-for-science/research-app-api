@@ -1,6 +1,7 @@
 ''' Providers module.
 '''
 from fhirclient import client
+from fhirclientstu3 import client as clientstu3
 
 from research_app.extensions import db
 
@@ -15,19 +16,24 @@ class Provider(db.Model):
     fhir_url = db.Column(db.String)
     redirect_uri = db.Column(db.String)
     scope = db.Column(db.String)
+    version = db.Column(db.String)
 
     @property
     def fhirclient(self):
         ''' Make a client.
         '''
-        fhirclient = client.FHIRClient({
-            'app_id': self.client_id,
-            'app_secret': self.client_secret,
-            'api_base': self.fhir_url,
-            'redirect_uri': self.redirect_uri,
-            'scope': self.scope,
-        })
+        config = {
+                'app_id': self.client_id,
+                'app_secret': self.client_secret,
+                'api_base': self.fhir_url,
+                'redirect_uri': self.redirect_uri,
+                'scope': self.scope,
+            }
+        if self.version == 'STU3':
+            fhirclient = clientstu3.FHIRClient(config)
 
+        else:
+            fhirclient = client.FHIRClient(config)
         return fhirclient
 
     @property
@@ -44,7 +50,10 @@ class Provider(db.Model):
     def supported_endpoints(self):
         ''' A list of S4S endpoints supported by this provider.
         '''
-        conformance = self.fhirclient.server.conformance.as_json()
+        if self.version == 'STU3':
+            conformance = self.fhirclient.server.capability_statement.as_json()
+        else:
+            conformance = self.fhirclient.server.conformance.as_json()
 
         resources = set()
         for rest in conformance.get('rest', []):

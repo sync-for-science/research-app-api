@@ -1,7 +1,6 @@
 ## The following requirements were added by pip freeze:
 astroid==1.4.8
 click==6.6
-fhirclient==1.0.6
 Flask==0.11.1
 Flask-SQLAlchemy==2.1
 furl==0.5.4

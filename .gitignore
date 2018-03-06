@@ -6,3 +6,4 @@ env.sh
 *.egg-info
 .cache
 .coverage
+*.pyc
