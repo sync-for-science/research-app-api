@@ -19,6 +19,12 @@ class Provider(db.Model):
     version = db.Column(db.String)
 
     @property
+    def fhirlib(self):
+       if self.version == 'STU3':
+          return clientstu3.FHIRClient
+       return client.FHIRClient
+
+    @property
     def fhirclient(self):
         ''' Make a client.
         '''
@@ -29,11 +35,7 @@ class Provider(db.Model):
                 'redirect_uri': self.redirect_uri,
                 'scope': self.scope,
             }
-        if self.version == 'STU3':
-            fhirclient = clientstu3.FHIRClient(config)
-
-        else:
-            fhirclient = client.FHIRClient(config)
+        fhirclient = self.fhirlib(config)
         return fhirclient
 
     @property

@@ -8,6 +8,13 @@ import subprocess
 from fhirclient import client
 from fhirclient.models.fhirabstractbase import FHIRValidationError
 from fhirclient.models.fhirelementfactory import FHIRElementFactory
+
+
+from fhirclientstu3 import client as clientstu3
+from fhirclientstu3.models.fhirabstractbase import FHIRValidationError as FHIRValidationErrorstu3
+from fhirclientstu3.models.fhirelementfactory import FHIRElementFactory as FHIRElementFactorystu3
+
+
 from furl import furl
 import requests
 
@@ -170,7 +177,7 @@ class Authorization(db.Model):
         else:
             state = json.loads(self._fhirclient)
 
-        return client.FHIRClient(state=state,
+        return self.provider.fhirlib(state=state,
                                  save_func=save_func)
 
     def callback_url(self, code):
