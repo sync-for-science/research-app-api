@@ -124,8 +124,8 @@ class Authorization(db.Model):
     def complete(self, code):
         ''' Complete the authorization process.
         '''
-        fhirclient = self.fhirclient()
-        fhirclient.handle_callback(self.callback_url(code))
+        fc = self.fhirclient()
+        fc.handle_callback(self.callback_url(code))
         self.status = self.STATUS_ACTIVE
 
         # TODO: Something more robust than this to kick-start resource syncing
@@ -144,17 +144,17 @@ class Authorization(db.Model):
     def fetch_resources(self):
         ''' Downloads all the available resources.
         '''
-        fhirclient = self.fhirclient()
+        fc = self.fhirclient()
         self._resources = []
 
         try:
-            resource = Resource.from_fhirclient_model(fhirclient.patient)
+            resource = Resource.from_fhirclient_model(fc.patient)
             self._resources.append(resource)
 
             for endpoint in self.provider.supported_endpoints:
                 try:
-                    endpoint = endpoint.format(patient_id=fhirclient.patient_id)
-                    bundle = fhirclient.server.request_json(endpoint)
+                    endpoint = endpoint.format(patient_id=fc.patient_id)
+                    bundle = fc.server.request_json(endpoint)
                     self._resources += Resource.from_json_bundle(bundle)
                 except requests.exceptions.HTTPError:
                     logging.info('HTTP Error: ' + endpoint)
@@ -171,13 +171,13 @@ class Authorization(db.Model):
             self._fhirclient = json.dumps(state)
 
         if not self._fhirclient:
-            fhirclient = self.provider.fhirclient
-            fhirclient.prepare()
-            state = fhirclient.state
+            fc = self.provider.fhirclient
+            fc.prepare()
+            state = fc.state
         else:
             state = json.loads(self._fhirclient)
 
-        return self.provider.fhirlib(state=state,
+        return self.provider.fhirlib(state=state,
                                  save_func=save_func)
 
     def callback_url(self, code):
