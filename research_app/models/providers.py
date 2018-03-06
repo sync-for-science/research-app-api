@@ -21,7 +21,9 @@ class Provider(db.Model):
     @property
     def fhirlib(self):
        if self.version == 'STU3':
+          print("use STU3 client")
           return clientstu3.FHIRClient
+       print("use DSTU2 client")
        return client.FHIRClient
 
     @property
