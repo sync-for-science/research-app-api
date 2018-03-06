@@ -54,8 +54,10 @@ class Provider(db.Model):
         '''
         if self.version == 'STU3':
             conformance = self.fhirclient.server.capability_statement.as_json()
+            print("Made STU3 client")
         else:
             conformance = self.fhirclient.server.conformance.as_json()
+            print("Made DSTU2 client")
 
         resources = set()
         for rest in conformance.get('rest', []):
