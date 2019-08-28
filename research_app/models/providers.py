@@ -15,6 +15,8 @@ class Provider(db.Model):
     fhir_url = db.Column(db.String)
     redirect_uri = db.Column(db.String)
     scope = db.Column(db.String)
+    username = db.Column(db.String)
+    password = db.Column(db.String)
 
     @property
     def fhirclient(self):
@@ -38,48 +40,9 @@ class Provider(db.Model):
             'id': self._id,
             'client_id': self.client_id,
             'name': self.name,
-            'signin_details': self.signin_details,
+            'username': self.username,
+            'password': self.password,
         }
-
-    @property
-    def signin_details(self):
-        signin_details = {
-            "Allscripts": {
-                'username': 'floppyrobot10',
-                'password': 's4s_pilot!'
-            },
-            "athenahealth": {
-                'username': 'ewiffin',
-                'password': '29NMfRhyygoG7iC9'
-            },
-            "Cerner": {
-                'username': 'ewiffin',
-                'password': '29NMfRhyygoG7iC9'
-            },
-            "CMS": {
-                'username': 'BBUser00000',
-                'password': 'PW00000!'
-            },
-            "drchrono": {
-                'username': 'api@drchrono.com',
-                'password': 'X6mx5AYmT7rUdVv44sZP'
-            },
-            "eClinicalWorks": {
-                'username': 'user2',
-                'password': 'Password2'
-            },
-            "Epic": {
-                'username': 'fhirjason',
-                'password': 'epicepic1'
-            },
-            "McKesson": {},
-            "SMART_EHR_STU2": {},
-            "SMART_EHR_STU3": {},
-            "SMART_FINANCIAL_STU3": {},
-            "Other": {},
-        }
-
-        return signin_details.get(self.name, {})
 
     @property
     def supported_endpoints(self):
