@@ -12,7 +12,7 @@
   fhir_url: https://open-ic.epic.com/Argonaut/api/FHIR/Argonaut/
   redirect_uri: http://localhost:9001/authorized
   username: fhirjason
-  password: epicepic1
+  demo_password: epicepic1
 - name: Allscripts
   client_id: a1019f1e-1401-4d15-b7ee-a3d3635419fd
   client_secret: sFhnJIJwQaXWzF5d4aLmfxtXsdZdBCsiIsWONQq8YTaoXgdhcHU2dTibw/drsSjZ+G82CbAYVfTFIVR/0OhWJw==
