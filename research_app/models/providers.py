@@ -15,6 +15,8 @@ class Provider(db.Model):
     fhir_url = db.Column(db.String)
     redirect_uri = db.Column(db.String)
     scope = db.Column(db.String)
+    username = db.Column(db.String)
+    demo_password = db.Column(db.String)
 
     @property
     def fhirclient(self):
@@ -38,6 +40,8 @@ class Provider(db.Model):
             'id': self._id,
             'client_id': self.client_id,
             'name': self.name,
+            'username': self.username,
+            'demo_password': self.demo_password,
         }
 
     @property
