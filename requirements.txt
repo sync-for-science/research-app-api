@@ -15,7 +15,7 @@ mccabe==0.5.2
 orderedmultidict==0.7.6
 pep8==1.7.0
 pylint==1.6.4
-PyYAML==3.12
+PyYAML==5.4
 requests==2.11.1
 six==1.10.0
 SQLAlchemy==1.0.15
